@@ -1,15 +1,16 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import TaskItem from '@/components/TaskItem';
 import api from '@/lib/api';
 import { logout } from '@/lib/auth';
-import socket from '@/lib/socket'; // ✅ Singleton socket instance
+import socket from '@/lib/socket';
 
 interface Task {
   _id: string;
   title: string;
   status: string;
+  listId: string;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -18,12 +19,20 @@ interface Task {
 export default function TaskListPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const listId = searchParams.get('listId');
 
   useEffect(() => {
+    if (!listId) {
+      alert('Missing listId in URL');
+      return;
+    }
+
     const fetchTasks = async () => {
       try {
         const res = await api.get('/tasks');
-        setTasks(res.data.data);
+        const filtered = res.data.data.filter((t: Task) => t.listId === listId);
+        setTasks(filtered);
       } catch (err: any) {
         console.error('Error fetching tasks:', err);
         alert('Unauthorized or failed to load tasks');
@@ -34,14 +43,18 @@ export default function TaskListPage() {
 
     fetchTasks();
 
+    socket.emit('joinList', listId);
+
     socket.on('taskCreated', (newTask: Task) => {
-      setTasks(prev => [...prev, newTask]);
+      if (newTask.listId === listId) setTasks(prev => [...prev, newTask]);
     });
 
     socket.on('taskUpdated', (updatedTask: Task) => {
-      setTasks(prev =>
-        prev.map(task => (task._id === updatedTask._id ? updatedTask : task))
-      );
+      if (updatedTask.listId === listId) {
+        setTasks(prev =>
+          prev.map(task => (task._id === updatedTask._id ? updatedTask : task))
+        );
+      }
     });
 
     socket.on('taskDeleted', (deletedTaskId: string) => {
@@ -49,23 +62,27 @@ export default function TaskListPage() {
     });
 
     return () => {
+      socket.emit('leaveList', listId);
       socket.off('taskCreated');
       socket.off('taskUpdated');
       socket.off('taskDeleted');
     };
-  }, []);
+  }, [listId]);
 
   return (
     <main className="max-w-2xl mx-auto py-6">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Your Tasks</h1>
-        <button className="btn" onClick={() => router.push('/tasks/new')}>
+        <h1 className="text-2xl font-bold">Tasks for List {listId}</h1>
+        <button
+          className="btn"
+          onClick={() => router.push(`/tasks/new?listId=${listId}`)}
+        >
           + New Task
         </button>
       </div>
       <div className="space-y-4">
         {tasks.length === 0 ? (
-          <p>No tasks found.</p>
+          <p>No tasks found in this list.</p>
         ) : (
           tasks.map((task) => (
             <TaskItem

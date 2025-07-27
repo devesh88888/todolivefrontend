@@ -12,7 +12,10 @@ export default function TaskItem({ task, onDelete }: any) {
     if (confirm('Are you sure?')) {
       try {
         await api.delete(`/tasks/${task._id}`);
-        socket.emit('deleteTask', task._id); // ✅ Real-time delete
+        socket.emit('deleteTask', {
+          listId: task.listId,       // ✅ Required for room-based emit
+          taskId: task._id,
+        });
         onDelete(); // Update local state
       } catch (err) {
         alert('Failed to delete task');

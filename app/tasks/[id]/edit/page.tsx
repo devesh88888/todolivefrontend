@@ -8,6 +8,7 @@ interface Task {
   _id: string;
   title: string;
   status: string;
+  listId: string;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -42,6 +43,7 @@ export default function EditTaskPage() {
   return (
     <main className="max-w-xl mx-auto py-6">
       <h1 className="text-xl font-bold mb-4">Edit Task</h1>
+      {/* ✅ Pass full task object to preserve listId */}
       <TaskForm task={task} />
     </main>
   );

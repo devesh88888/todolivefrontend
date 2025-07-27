@@ -1,17 +1,28 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import socket from '@/lib/socket'; // shared instance
+import socket from '@/lib/socket';
 
 export default function TaskForm({ task }: { task?: any }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const listIdParam = searchParams.get('listId'); // ✅ read listId from URL for new tasks
+
   const [form, setForm] = useState({
     title: task?.title || '',
     status: task?.status || 'pending',
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const listId = task?.listId || listIdParam; // ✅ use from task or query param
+
+  useEffect(() => {
+    if (!task && !listId) {
+      alert('Missing listId for new task.');
+      router.push('/lists'); // redirect to safe page
+    }
+  }, [task, listId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -24,10 +35,10 @@ export default function TaskForm({ task }: { task?: any }) {
     try {
       if (task) {
         const res = await api.put(`/tasks/${task._id}`, form);
-        socket.emit('updateTask', res.data.data);
+        socket.emit('updateTask', { listId: task.listId, task: res.data.data });
       } else {
-        const res = await api.post('/tasks', form);
-        socket.emit('createTask', res.data.data);
+        const res = await api.post('/tasks', { ...form, listId });
+        socket.emit('createTask', { listId, task: res.data.data });
       }
 
       router.push('/tasks');
