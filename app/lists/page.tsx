@@ -57,6 +57,19 @@ export default function ListsPage() {
     }
   };
 
+  const handleDeleteList = async (listId: string) => {
+    const confirmDelete = confirm('Are you sure you want to delete this list?');
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete(`/lists/${listId}`);
+      setLists(prev => prev.filter(list => list._id !== listId));
+    } catch (err) {
+      console.error('Delete list error:', err);
+      alert('Failed to delete list');
+    }
+  };
+
   const goToTasks = (listId: string) => {
     router.push(`/tasks?listId=${listId}`);
   };
@@ -91,13 +104,20 @@ export default function ListsPage() {
           {lists.map(list => (
             <li
               key={list._id}
-              onClick={() => goToTasks(list._id)}
-              className="border p-4 rounded cursor-pointer hover:bg-gray-100"
+              className="border p-4 rounded flex justify-between items-center hover:bg-gray-50"
             >
-              <h2 className="font-semibold">{list.name}</h2>
-              <p className="text-sm text-gray-500">
-                Members: {list.members.length} | Created: {new Date(list.createdAt).toLocaleDateString()}
-              </p>
+              <div className="cursor-pointer" onClick={() => goToTasks(list._id)}>
+                <h2 className="font-semibold">{list.name}</h2>
+                <p className="text-sm text-gray-500">
+                  Members: {list.members.length} | Created: {new Date(list.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <button
+                onClick={() => handleDeleteList(list._id)}
+                className="text-red-600 text-sm hover:underline"
+              >
+                Delete
+              </button>
             </li>
           ))}
         </ul>

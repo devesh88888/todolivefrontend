@@ -16,8 +16,14 @@ interface Task {
   updatedAt: string;
 }
 
+interface List {
+  _id: string;
+  name: string;
+}
+
 export default function TaskListPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [listName, setListName] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
   const listId = searchParams.get('listId');
@@ -29,20 +35,25 @@ export default function TaskListPage() {
       return;
     }
 
-    const fetchTasks = async () => {
+    const fetchListAndTasks = async () => {
       try {
+        // 🧾 Fetch list name
+        const listRes = await api.get(`/lists/${listId}`);
+        setListName(listRes.data.data.name);
+
+        // 📦 Fetch tasks
         const res = await api.get('/tasks');
         const filtered = res.data.data.filter((t: Task) => t.listId === listId);
         setTasks(filtered);
       } catch (err: any) {
-        console.error('Error fetching tasks:', err);
+        console.error('Error fetching list or tasks:', err);
         alert('Unauthorized or failed to load tasks');
         logout();
         router.push('/login');
       }
     };
 
-    fetchTasks();
+    fetchListAndTasks();
 
     socket.emit('joinList', listId);
 
@@ -77,7 +88,9 @@ export default function TaskListPage() {
   return (
     <main className="max-w-2xl mx-auto py-6">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Tasks for List: <span className="text-blue-600">{listId}</span></h1>
+        <h1 className="text-2xl font-bold">
+          Tasks for List: <span className="text-blue-600">{listName}</span>
+        </h1>
         <button
           className="btn"
           onClick={() => router.push(`/tasks/new?listId=${listId}`)}
