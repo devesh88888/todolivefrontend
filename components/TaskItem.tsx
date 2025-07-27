@@ -1,14 +1,23 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import { io } from 'socket.io-client';
+
+const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5050');
 
 export default function TaskItem({ task, onDelete }: any) {
   const router = useRouter();
 
   const handleDelete = async () => {
     if (confirm('Are you sure?')) {
-      await api.delete(`/tasks/${task._id}`);
-      onDelete();
+      try {
+        await api.delete(`/tasks/${task._id}`);
+        socket.emit('deleteTask', task._id); // ✅ Real-time delete
+        onDelete(); // Update local state
+      } catch (err) {
+        alert('Failed to delete task');
+        console.error(err);
+      }
     }
   };
 

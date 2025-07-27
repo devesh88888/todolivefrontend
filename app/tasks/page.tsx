@@ -1,9 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import TaskItem from '@/components/TaskItem';
+import api from '@/lib/api';
 import { logout } from '@/lib/auth';
+import socket from '@/lib/socket'; // ✅ Singleton socket instance
 
 interface Task {
   _id: string;
@@ -21,9 +22,8 @@ export default function TaskListPage() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await api.get('/tasks'); // Axios auto adds token
-        console.log('Fetched tasks:', res.data);
-        setTasks(res.data.data); // Data is expected under `data`
+        const res = await api.get('/tasks');
+        setTasks(res.data.data);
       } catch (err: any) {
         console.error('Error fetching tasks:', err);
         alert('Unauthorized or failed to load tasks');
@@ -31,14 +31,37 @@ export default function TaskListPage() {
         router.push('/login');
       }
     };
+
     fetchTasks();
+
+    socket.on('taskCreated', (newTask: Task) => {
+      setTasks(prev => [...prev, newTask]);
+    });
+
+    socket.on('taskUpdated', (updatedTask: Task) => {
+      setTasks(prev =>
+        prev.map(task => (task._id === updatedTask._id ? updatedTask : task))
+      );
+    });
+
+    socket.on('taskDeleted', (deletedTaskId: string) => {
+      setTasks(prev => prev.filter(task => task._id !== deletedTaskId));
+    });
+
+    return () => {
+      socket.off('taskCreated');
+      socket.off('taskUpdated');
+      socket.off('taskDeleted');
+    };
   }, []);
 
   return (
     <main className="max-w-2xl mx-auto py-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Your Tasks</h1>
-        <button className="btn" onClick={() => router.push('/tasks/new')}>+ New Task</button>
+        <button className="btn" onClick={() => router.push('/tasks/new')}>
+          + New Task
+        </button>
       </div>
       <div className="space-y-4">
         {tasks.length === 0 ? (
