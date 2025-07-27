@@ -6,6 +6,7 @@ import api from '@/lib/api';
 export default function Register() {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -13,13 +14,17 @@ export default function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await api.post('/auth/register', form);
       localStorage.setItem('token', res.data.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.data));
-      router.push('/tasks');
-    } catch (err) {
-      alert('Registration failed');
+      router.push('/lists'); // ✅ Redirect to lists page instead of tasks
+    } catch (err: any) {
+      console.error('Registration error:', err.response?.data || err.message || err);
+      alert(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -29,32 +34,43 @@ export default function Register() {
         Live Collaborative To-Do List
       </h1>
 
-      <form onSubmit={handleRegister} className="p-6 bg-white shadow-md rounded w-80 space-y-4">
+      <form
+        onSubmit={handleRegister}
+        className="p-6 bg-white shadow-md rounded w-80 space-y-4"
+        autoComplete="off"
+      >
         <h2 className="text-xl font-bold text-center">Register</h2>
+
         <input
           name="name"
           placeholder="Name"
           required
           className="input"
+          value={form.name}
           onChange={handleChange}
         />
         <input
           name="email"
-          placeholder="Email"
           type="email"
+          placeholder="Email"
           required
           className="input"
+          value={form.email}
           onChange={handleChange}
         />
         <input
           name="password"
-          placeholder="Password"
           type="password"
+          placeholder="Password"
           required
           className="input"
+          value={form.password}
           onChange={handleChange}
         />
-        <button type="submit" className="btn w-full">Register</button>
+
+        <button type="submit" className="btn w-full" disabled={loading}>
+          {loading ? 'Registering...' : 'Register'}
+        </button>
 
         <div className="text-center text-sm text-gray-600">
           Already registered?

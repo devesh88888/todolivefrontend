@@ -5,7 +5,14 @@ import { io } from 'socket.io-client';
 
 const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5050');
 
-export default function TaskItem({ task, onDelete }: any) {
+interface Task {
+  _id: string;
+  title: string;
+  status: string;
+  listId: string;
+}
+
+export default function TaskItem({ task, onDelete }: { task: Task; onDelete: () => void }) {
   const router = useRouter();
 
   const handleDelete = async () => {
@@ -13,10 +20,10 @@ export default function TaskItem({ task, onDelete }: any) {
       try {
         await api.delete(`/tasks/${task._id}`);
         socket.emit('deleteTask', {
-          listId: task.listId,       // ✅ Required for room-based emit
+          listId: task.listId, // ✅ Required for room-based emit
           taskId: task._id,
         });
-        onDelete(); // Update local state
+        onDelete(); // update local state in parent
       } catch (err) {
         alert('Failed to delete task');
         console.error(err);
@@ -31,8 +38,18 @@ export default function TaskItem({ task, onDelete }: any) {
         <p className="text-sm text-gray-600">Status: {task.status}</p>
       </div>
       <div className="space-x-2">
-        <button onClick={() => router.push(`/tasks/${task._id}/edit`)} className="btn-sm">Edit</button>
-        <button onClick={handleDelete} className="btn-sm bg-red-500">Delete</button>
+        <button
+          onClick={() => router.push(`/tasks/${task._id}/edit`)}
+          className="btn-sm"
+        >
+          Edit
+        </button>
+        <button
+          onClick={handleDelete}
+          className="btn-sm bg-red-500 text-white"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );

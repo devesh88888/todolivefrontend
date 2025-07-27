@@ -25,6 +25,7 @@ export default function TaskListPage() {
   useEffect(() => {
     if (!listId) {
       alert('Missing listId in URL');
+      router.push('/lists');
       return;
     }
 
@@ -46,7 +47,9 @@ export default function TaskListPage() {
     socket.emit('joinList', listId);
 
     socket.on('taskCreated', (newTask: Task) => {
-      if (newTask.listId === listId) setTasks(prev => [...prev, newTask]);
+      if (newTask.listId === listId) {
+        setTasks(prev => [...prev, newTask]);
+      }
     });
 
     socket.on('taskUpdated', (updatedTask: Task) => {
@@ -69,10 +72,12 @@ export default function TaskListPage() {
     };
   }, [listId]);
 
+  if (!listId) return null;
+
   return (
     <main className="max-w-2xl mx-auto py-6">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Tasks for List {listId}</h1>
+        <h1 className="text-2xl font-bold">Tasks for List: <span className="text-blue-600">{listId}</span></h1>
         <button
           className="btn"
           onClick={() => router.push(`/tasks/new?listId=${listId}`)}
@@ -82,7 +87,7 @@ export default function TaskListPage() {
       </div>
       <div className="space-y-4">
         {tasks.length === 0 ? (
-          <p>No tasks found in this list.</p>
+          <p className="text-gray-500">No tasks found in this list.</p>
         ) : (
           tasks.map((task) => (
             <TaskItem

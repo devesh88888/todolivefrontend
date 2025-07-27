@@ -7,7 +7,8 @@ import socket from '@/lib/socket';
 export default function TaskForm({ task }: { task?: any }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const listIdParam = searchParams.get('listId'); // ✅ read listId from URL for new tasks
+  const listIdParam = searchParams.get('listId');
+  const listId = task?.listId || listIdParam;
 
   const [form, setForm] = useState({
     title: task?.title || '',
@@ -15,12 +16,12 @@ export default function TaskForm({ task }: { task?: any }) {
   });
 
   const [submitting, setSubmitting] = useState(false);
-  const listId = task?.listId || listIdParam; // ✅ use from task or query param
 
+  // ✅ Redirect if listId is missing for new tasks
   useEffect(() => {
     if (!task && !listId) {
       alert('Missing listId for new task.');
-      router.push('/lists'); // redirect to safe page
+      router.push('/lists'); // Go to list selection page
     }
   }, [task, listId]);
 
@@ -35,13 +36,19 @@ export default function TaskForm({ task }: { task?: any }) {
     try {
       if (task) {
         const res = await api.put(`/tasks/${task._id}`, form);
-        socket.emit('updateTask', { listId: task.listId, task: res.data.data });
+        socket.emit('updateTask', {
+          listId: task.listId,
+          task: res.data.data,
+        });
+        router.push(`/tasks?listId=${task.listId}`);
       } else {
         const res = await api.post('/tasks', { ...form, listId });
-        socket.emit('createTask', { listId, task: res.data.data });
+        socket.emit('createTask', {
+          listId,
+          task: res.data.data,
+        });
+        router.push(`/tasks?listId=${listId}`);
       }
-
-      router.push('/tasks');
     } catch (err: any) {
       console.error('Task submission error:', err.response?.data || err.message || err);
       alert('Failed to submit. Check the console for details.');
@@ -49,6 +56,8 @@ export default function TaskForm({ task }: { task?: any }) {
       setSubmitting(false);
     }
   };
+
+  if (!listId && !task) return null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
