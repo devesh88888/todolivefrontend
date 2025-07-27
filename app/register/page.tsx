@@ -3,6 +3,14 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import api from '@/lib/api';
 
+interface ErrorWithResponse {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 export default function Register() {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -19,10 +27,21 @@ export default function Register() {
       const res = await api.post('/auth/register', form);
       localStorage.setItem('token', res.data.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.data));
-      router.push('/lists'); // ✅ Redirect to lists page instead of tasks
-    } catch (err: any) {
-      console.error('Registration error:', err.response?.data || err.message || err);
-      alert(err.response?.data?.message || 'Registration failed');
+      router.push('/lists');
+    } catch (err: unknown) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as ErrorWithResponse).response?.data?.message === 'string'
+      ) {
+        alert((err as ErrorWithResponse).response!.data!.message);
+      } else if (err instanceof Error) {
+        console.error('Registration error:', err.message);
+        alert(err.message);
+      } else {
+        alert('Registration failed');
+      }
     } finally {
       setLoading(false);
     }

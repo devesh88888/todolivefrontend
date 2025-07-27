@@ -1,4 +1,5 @@
 'use client';
+
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import api from '@/lib/api';
@@ -16,10 +17,16 @@ export default function Login() {
       const res = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', res.data.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.data));
-      router.push('/lists'); // ✅ Redirect to lists page instead of tasks
-    } catch (err: any) {
-      console.error('Login error:', err.response?.data || err.message || err);
-      alert(err.response?.data?.message || 'Login failed');
+      router.push('/lists'); // ✅ Redirect to lists page after login
+    } catch (err: unknown) {
+      if (err instanceof Error && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        console.error('Login error:', axiosErr.response?.data || err.message);
+        alert(axiosErr.response?.data?.message || 'Login failed');
+      } else {
+        console.error('Unexpected login error:', err);
+        alert('Login failed');
+      }
     } finally {
       setLoading(false);
     }

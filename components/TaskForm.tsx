@@ -4,7 +4,23 @@ import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import socket from '@/lib/socket';
 
-export default function TaskForm({ task }: { task?: any }) {
+interface Task {
+  _id: string;
+  title: string;
+  status: string;
+  listId: string;
+}
+
+interface CustomError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
+export default function TaskForm({ task }: { task?: Task }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const listIdParam = searchParams.get('listId');
@@ -17,13 +33,12 @@ export default function TaskForm({ task }: { task?: any }) {
 
   const [submitting, setSubmitting] = useState(false);
 
-  // ✅ Redirect if listId is missing for new tasks
   useEffect(() => {
     if (!task && !listId) {
       alert('Missing listId for new task.');
-      router.push('/lists'); // Go to list selection page
+      router.push('/lists');
     }
-  }, [task, listId]);
+  }, [task, listId, router]); // ✅ Include router in dependency array
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -49,9 +64,10 @@ export default function TaskForm({ task }: { task?: any }) {
         });
         router.push(`/tasks?listId=${listId}`);
       }
-    } catch (err: any) {
-      console.error('Task submission error:', err.response?.data || err.message || err);
-      alert('Failed to submit. Check the console for details.');
+    } catch (err: unknown) {
+      const error = err as CustomError;
+      console.error('Task submission error:', error.response?.data || error.message || error);
+      alert(error.response?.data?.message || 'Failed to submit. Check the console for details.');
     } finally {
       setSubmitting(false);
     }
