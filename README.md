@@ -1,10 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Live Collaborative To-Do List
 
-## Getting Started
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app). It supports **real-time collaboration** using shared lists and Socket.IO.
 
-First, run the development server:
+## 🚀 Live Demo
+
+👉 [https://todolivefrontend.vercel.app/login](https://todolivefrontend.vercel.app/login)
+
+## 🛠 Getting Started (Development)
+
+To run the project locally, follow these steps:
+
+### 1. Install dependencies
 
 ```bash
+npm install
+# or
+yarn
+# or
+pnpm install
+# or
+bun install
+2. Start the development server
+bash
+Copy
+Edit
 npm run dev
 # or
 yarn dev
@@ -12,25 +31,66 @@ yarn dev
 pnpm dev
 # or
 bun dev
-```
+Visit http://localhost:3000 in your browser to access the app.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+👥 How to Use the App
+Login as Alice
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Email: alice@example.com
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Password: alice
 
-## Learn More
+Login as Bob
 
-To learn more about Next.js, take a look at the following resources:
+Email: bob@example.com
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Password: bob
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Use a different browser or incognito window
 
-## Deploy on Vercel
+Create a Shared List
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Name it something like List1
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Add both users to the list:
+
+alice@example.com
+
+bob@example.com
+
+Collaborate in Real-Time
+
+Both Alice and Bob can:
+
+Create tasks
+
+Edit tasks
+
+Update task status (Pending, In Progress, Completed)
+
+Changes are reflected live for all collaborators
+
+📝 Project Features
+Real-time task collaboration
+
+User authentication
+
+Shared task lists
+
+Role-based task access
+
+Mobile-responsive UI (TailwindCSS)
+
+Socket.IO powered updates
+
+📚 Learn More
+Next.js Documentation
+
+Interactive Next.js Tutorial
+
+Next.js GitHub Repository
+
+🚀 Deployment
+This project is deployed using the Vercel Platform.
+
+For deployment instructions, visit the Next.js Deployment Guide.
